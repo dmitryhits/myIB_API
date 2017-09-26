@@ -136,13 +136,13 @@ def main():
     logging.getLogger().setLevel(logging.ERROR)
 
     #enable logging when member vars are assigned
-    import utils 
-    from order import Order
+    import ibapi.utils as utils
+    from ibapi.order import Order
     Order.__setattr__ = utils.setattr_log
-    from contract import Contract,UnderComp
+    from ibapi.contract import Contract,UnderComp
     Contract.__setattr__ = utils.setattr_log 
     UnderComp.__setattr__ = utils.setattr_log 
-    from tag_value import TagValue
+    from ibapi.tag_value import TagValue
     TagValue.__setattr__ = utils.setattr_log
     TimeCondition.__setattr__ = utils.setattr_log 
     ExecutionCondition.__setattr__ = utils.setattr_log  
