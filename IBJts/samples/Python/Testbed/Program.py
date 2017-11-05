@@ -251,23 +251,23 @@ class TestApp(TestWrapper, TestClient):
             self.reqGlobalCancel()
         else:
             print("Executing requests")
-            self.reqGlobalCancel()
-            self.marketDataType_req()
-            self.accountOperations_req()
-            self.tickDataOperations_req()
-            self.marketDepthOperations_req()
+            #self.reqGlobalCancel()
+            #self.marketDataType_req()
+            #self.accountOperations_req()
+            #self.tickDataOperations_req()
+            #self.marketDepthOperations_req()
             self.realTimeBars_req()
             self.historicalDataRequests_req()
-            self.optionsOperations_req()
-            self.marketScanners_req()
-            self.reutersFundamentals_req()
-            self.bulletins_req()
-            self.contractOperations_req()
-            self.contractNewsFeed_req()
-            self.miscelaneous_req()
-            self.linkingOperations()
-            self.financialAdvisorOperations()
-            self.orderOperations_req()
+            #self.optionsOperations_req()
+            #self.marketScanners_req()
+            #self.reutersFundamentals_req()
+            #self.bulletins_req()
+            #self.contractOperations_req()
+            #self.contractNewsFeed_req()
+            #self.miscelaneous_req()
+            #self.linkingOperations()
+            #self.financialAdvisorOperations()
+            #self.orderOperations_req()
             print("Executing requests ... finished")
 
     def keyboardInterrupt(self):
@@ -1635,6 +1635,7 @@ def main():
         # ! [connect]
 
         app.run()
+
     except:
         raise
     finally:
