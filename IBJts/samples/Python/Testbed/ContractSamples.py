@@ -174,6 +174,28 @@ class ContractSamples:
         #! [optcontract_us]
         return contract
 
+    @staticmethod
+    def ETF():
+        contract = Contract()
+        contract.symbol = "SPY"
+        contract.secType = "STK"
+        contract.currency = "USD"
+        contract.exchange = "SMART"
+        contract.primaryExchange = "ARCA"
+        return contract
+
+    @staticmethod
+    def ETFOption():
+        contract = Contract()
+        contract.symbol = "SPY"
+        contract.secType = "OPT"
+        contract.currency = "USD"
+        contract.exchange = "SMART"
+        contract.lastTradeDateOrContractMonth = "20171215"
+        contract.strike = 260
+        contract.right = "P"
+        contract.multiplier = "100"
+        return contract
 
     @staticmethod
     def OptionAtBOX():
