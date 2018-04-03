@@ -74,6 +74,8 @@ class Contract(Object):
         self.includeExpired = False
         self.secIdType = ""	  # CUSIP;SEDOL;ISIN;RIC
         self.secId = ""
+        self.earliestTradeDate = ""
+
 
         #combos
         self.comboLegsDescrip = ""  # type: str; received in open order 14 and up for all combos
