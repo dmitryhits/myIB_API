@@ -17,6 +17,7 @@ class TestWrapper(EWrapper):
 
     def headTimestamp(self, reqId: int, headTimestamp: str):
         print("HeadTimestamp: ", reqId, " ", headTimestamp)
+        self.earliestDate = headTimestamp
 
     # ! [historicaldata]
     def historicalData(self, reqId:int, bar: BarData):
@@ -46,17 +47,20 @@ class TestWrapper(EWrapper):
                                                   underlyingConId, tradingClass, multiplier, expirations, strikes)
         print("Security Definition Option Parameter. ReqId:", reqId, "Exchange:", exchange, "Underlying conId:", underlyingConId)
         #print("Security Definition Option Parameter. ReqId:%d Exchange:%s Underlying conId: %d " % reqId, exchange, underlyingConId)
-        print("TradingClass:%s Multiplier:%s Exp:%s Strikes:%s" % tradingClass, multiplier, ",".join(expirations), ",".join(str(strikes)))
-
+        #print("TradingClass:%s Multiplier:%s Exp:%s Strikes:%s" % tradingClass, multiplier, ",".join(expirations), ",".join(str(strikes)))
+        print("TradingClass:", tradingClass, "Multiplier:", multiplier, "Exp:", ",".join(expirations))
+        print("Strikes:", strikes)
     # ! [securityDefinitionOptionParameter]
+
+
 
 
     # ! [securityDefinitionOptionParameterEnd]
     def securityDefinitionOptionParameterEnd(self, reqId: int):
         super().securityDefinitionOptionParameterEnd(reqId)
         print("Security Definition Option Parameter End. Request: ", reqId)
-
     # ! [securityDefinitionOptionParameterEnd]
+
 
 
 class TestClient(EClient):

@@ -14,7 +14,7 @@ files = glob.glob(main_path+'**/*csv', recursive=True)
 bank_days = {file.strip('_OData.csv').split('/')[-1]:file for file in files}
 
 apple_price = []
-for day in bank_days:
+for day in sorted(bank_days.keys()):
     option_sample = pd.read_csv(bank_days[day], index_col='Symbol')
     apple_price.append(option_sample['UnderlyingPrice'].loc['AAPL'].unique()[0])
 
