@@ -4,7 +4,8 @@ from ibapi.common import *
 import sys
 from ContractSamples import ContractSamples
 import time
-import datetime
+from datetime import datetime, timedelta
+import math
 
 class TestWrapper(EWrapper):
     def __init__(self):
@@ -17,7 +18,7 @@ class TestWrapper(EWrapper):
 
     def headTimestamp(self, reqId: int, headTimestamp: str):
         print("HeadTimestamp: ", reqId, " ", headTimestamp)
-        self.earliestDate = headTimestamp
+        return headTimestamp
 
     # ! [historicaldata]
     def historicalData(self, reqId:int, bar: BarData):
@@ -85,6 +86,7 @@ class TestApp(TestClient, TestWrapper):
     def historicalDataRequests_req(self):
         # ! [reqHeadTimeStamp]
         self.reqHeadTimeStamp(4103, ContractSamples.USStockAtSmart(), "TRADES", 0, 1)
+        ContractSamples.USStockAtSmart().earliestTradeDate = "19980102  14:30:00"
         # ! [reqHeadTimeStamp]
 
         time.sleep(1)
@@ -94,12 +96,21 @@ class TestApp(TestClient, TestWrapper):
         # ! [cancelHeadTimestamp]
         # ! [reqhistoricaldata]
         #queryTime = (datetime.datetime.today() - datetime.timedelta(days=180)).strftime("%Y%m%d %H:%M:%S")
-        queryTime = datetime.datetime.today().strftime("%Y%m%d %H:%M:%S")
+        dateFormatStr = "%Y%m%d %H:%M:%S"
+        queryTime = datetime.today().strftime(dateFormatStr)
         print("queryTime = ", queryTime)
-        self.reqHistoricalData(4101, ContractSamples.USStockAtSmart(), queryTime,
-                               "1 M", "1 day", "MIDPOINT", 1, 1, False, [])
-        #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
-        self.reqHistoricalData(4104, ContractSamples.ETFOption(), queryTime, "1 M", "1 hour", "MIDPOINT", 1, 1, False, [])
+        print("earliest trades date = ", ContractSamples.USStockAtSmart().earliestTradeDate)
+        timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime(ContractSamples.USStockAtSmart().earliestTradeDate, dateFormatStr)
+        requestPeriod = timedelta(weeks=1)
+        for i in range(math.ceil(timeRange/requestPeriod)):
+            #requestID = 5000
+            self.reqHistoricalData(5000+i, ContractSamples.USStockAtSmart(), queryTime,
+                               "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
+            queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=1)).strftime(dateFormatStr)
+            if i%5 == 0: time.sleep(2)
+            if i%60 == 0: time.sleep(10*60)
+            #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
+        #self.reqHistoricalData(4104, ContractSamples.ETFOption(), queryTime, "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
 
         # ! [reqhistoricaldata]
 
@@ -182,7 +193,7 @@ class TestApp(TestClient, TestWrapper):
 
 if __name__ == '__main__':
     app = TestApp()
-    app.connect("127.0.0.1", 7497, 0)
+    app.connect("127.0.0.1", 4002, 0)
     print("really no errors?")
     app.run()
     print("this is the last line in the code")
