@@ -100,15 +100,18 @@ class TestApp(TestClient, TestWrapper):
         queryTime = datetime.today().strftime(dateFormatStr)
         print("queryTime = ", queryTime)
         print("earliest trades date = ", ContractSamples.USStockAtSmart().earliestTradeDate)
-        timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime(ContractSamples.USStockAtSmart().earliestTradeDate, dateFormatStr)
+        timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime("19980102  14:30:00", dateFormatStr)
         requestPeriod = timedelta(weeks=1)
-        for i in range(math.ceil(timeRange/requestPeriod)):
+        print("Steps:", math.ceil(timeRange/requestPeriod))
+        for i in range(int(math.ceil(timeRange/requestPeriod))):
+            print("step:", i)
             #requestID = 5000
             self.reqHistoricalData(5000+i, ContractSamples.USStockAtSmart(), queryTime,
                                "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
             queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=1)).strftime(dateFormatStr)
-            if i%5 == 0: time.sleep(2)
-            if i%60 == 0: time.sleep(10*60)
+            print("new query time:", queryTime)
+            if i%5 == 0 and i!=0: time.sleep(2)
+            if i%60 == 0 and i!=0: break
             #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
         #self.reqHistoricalData(4104, ContractSamples.ETFOption(), queryTime, "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
 
@@ -116,9 +119,10 @@ class TestApp(TestClient, TestWrapper):
 
     def historicalDataRequests_cancel(self):
         # Canceling historical data requests
-        self.cancelHistoricalData(4101)
-        self.cancelHistoricalData(4102)
-        self.cancelHistoricalData(4104)
+        pass
+        #self.cancelHistoricalData(4101)
+        #self.cancelHistoricalData(4102)
+        #self.cancelHistoricalData(4104)
 
     # ! [nextvalidid]
     def nextValidId(self, orderId: int):
@@ -149,7 +153,7 @@ class TestApp(TestClient, TestWrapper):
             #self.tickDataOperations_req()
             #self.marketDepthOperations_req()
             #self.realTimeBars_req()
-            self.reqSecDefOptParams(5001, "SPY", "", "STK", 756733)
+            #self.reqSecDefOptParams(5001, "SPY", "", "STK", 756733)
             self.historicalDataRequests_req()
             #self.optionsOperations_req()
             #self.marketScanners_req()
