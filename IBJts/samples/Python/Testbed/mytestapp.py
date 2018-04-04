@@ -6,11 +6,12 @@ from ContractSamples import ContractSamples
 import time
 from datetime import datetime, timedelta
 import math
+import pandas as pd
 
 class TestWrapper(EWrapper):
     def __init__(self):
         EWrapper.__init__(self)
-
+        self.historical_data = pd.DataFrame(columns=["Date", "Open", "High", "Low", "Close", "Volume","Count", "WAP"], index="Date")
     def error(self, reqId: TickerId, errorCode: int, errorString: str):
         print("Error: ", reqId, " Code: ", errorCode, " Msg: ", errorString+'\n')
         if errorCode == 502:
@@ -25,6 +26,7 @@ class TestWrapper(EWrapper):
         print("HistoricalData. ", reqId, " Date:", bar.date, "Open:", bar.open,
               "High:", bar.high, "Low:", bar.low, "Close:", bar.close, "Volume:", bar.volume,
               "Count:", bar.barCount, "WAP:", bar.average)
+        self.historical_data.append([bar.date, bar.open, bar.high, bar.low, bar.close, bar.volume, bar.barCount, bar.average])
     # ! [historicaldata]
 
     # ! [historicaldataend]
