@@ -11,7 +11,8 @@ import pandas as pd
 class TestWrapper(EWrapper):
     def __init__(self):
         EWrapper.__init__(self)
-        self.historical_data = pd.DataFrame(columns=["Date", "Open", "High", "Low", "Close", "Volume","Count", "WAP"], index="Date")
+        self.historical_data = []
+        self.historicalDataRequestIds = []
     def error(self, reqId: TickerId, errorCode: int, errorString: str):
         print("Error: ", reqId, " Code: ", errorCode, " Msg: ", errorString+'\n')
         if errorCode == 502:
@@ -26,7 +27,8 @@ class TestWrapper(EWrapper):
         print("HistoricalData. ", reqId, " Date:", bar.date, "Open:", bar.open,
               "High:", bar.high, "Low:", bar.low, "Close:", bar.close, "Volume:", bar.volume,
               "Count:", bar.barCount, "WAP:", bar.average)
-        self.historical_data.append([bar.date, bar.open, bar.high, bar.low, bar.close, bar.volume, bar.barCount, bar.average])
+        self.historical_data.append([reqId, bar.date, bar.open, bar.high, bar.low, bar.close, bar.volume, bar.barCount, bar.average])
+        if self.historicalDataRequestIds.count(reqId): self.historicalDataRequestIds.remove(reqId)
     # ! [historicaldata]
 
     # ! [historicaldataend]
@@ -76,10 +78,11 @@ class TestClient(EClient):
 class TestApp(TestClient, TestWrapper):
     def __init__(self):
         TestWrapper.__init__(self)
-        TestClient.__init__(self,wrapper=self)
+        TestClient.__init__(self, wrapper=self)
         self.nKeybInt = 0
         self.started = False
         self.nextValidOrderId = None
+        self.nextHistoricalDataRequestId = 5000
         self.permId2ord = {}
         #self.reqId2nErr = collections.defaultdict(int)
         self.globalCancelOnly = False
@@ -108,10 +111,12 @@ class TestApp(TestClient, TestWrapper):
         for i in range(int(math.ceil(timeRange/requestPeriod))):
             print("step:", i)
             #requestID = 5000
-            self.reqHistoricalData(5000+i, ContractSamples.USStockAtSmart(), queryTime,
+            self.reqHistoricalData(self.nextHistoricalDataRequestId, ContractSamples.USStockAtSmart(), queryTime,
                                "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
             queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=1)).strftime(dateFormatStr)
             print("new query time:", queryTime)
+            self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
+            self.nextHistoricalDataRequestId+=1
             if i%5 == 0 and i!=0: time.sleep(2)
             if i%60 == 0 and i!=0: break
             #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
