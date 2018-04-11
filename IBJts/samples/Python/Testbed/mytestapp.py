@@ -13,6 +13,7 @@ class TestWrapper(EWrapper):
         EWrapper.__init__(self)
         self.historical_data = []
         self.historicalDataRequestIds = []
+        self.historicalDataReceivedIds = []
     def error(self, reqId: TickerId, errorCode: int, errorString: str):
         print("Error: ", reqId, " Code: ", errorCode, " Msg: ", errorString+'\n')
         if errorCode == 502:
@@ -28,7 +29,7 @@ class TestWrapper(EWrapper):
               "High:", bar.high, "Low:", bar.low, "Close:", bar.close, "Volume:", bar.volume,
               "Count:", bar.barCount, "WAP:", bar.average)
         self.historical_data.append([reqId, bar.date, bar.open, bar.high, bar.low, bar.close, bar.volume, bar.barCount, bar.average])
-        if self.historicalDataRequestIds.count(reqId): self.historicalDataRequestIds.remove(reqId)
+        #if not self.historicalDataReceivedIds.count(reqId): self.historicalDataReceivedIds.append(reqId)
     # ! [historicaldata]
 
     # ! [historicaldataend]
@@ -83,6 +84,8 @@ class TestApp(TestClient, TestWrapper):
         self.started = False
         self.nextValidOrderId = None
         self.nextHistoricalDataRequestId = 5000
+        self.historicalDataFrame = pd.DataFrame(columns=["reqID", "Date", "Open", "High", "Low",
+                                                         "Close", "Volume", "Count", "WAP"])
         self.permId2ord = {}
         #self.reqId2nErr = collections.defaultdict(int)
         self.globalCancelOnly = False
@@ -112,7 +115,7 @@ class TestApp(TestClient, TestWrapper):
             print("step:", i)
             #requestID = 5000
             self.reqHistoricalData(self.nextHistoricalDataRequestId, ContractSamples.USStockAtSmart(), queryTime,
-                               "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
+                               "2 W", "5 mins", "TRADES", 1, 1, False, [])
             queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=1)).strftime(dateFormatStr)
             print("new query time:", queryTime)
             self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
@@ -123,6 +126,23 @@ class TestApp(TestClient, TestWrapper):
         #self.reqHistoricalData(4104, ContractSamples.ETFOption(), queryTime, "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
 
         # ! [reqhistoricaldata]
+    def historicalDataEnd(self, reqId: int, start: str, end: str):
+        super().historicalDataEnd(reqId, start, end)
+        self.historicalDataReceivedIds.append(reqId)
+        if len(self.historicalDataReceivedIds) == len(self.historicalDataRequestIds):
+            self.historicalDataStore()
+            print("Data Stored")
+
+
+    def historicalDataStore(self):
+        self.historicalDataFrame = self.historicalDataFrame.append(pd.DataFrame(self.historical_data,
+                                                                                columns=["reqID", "Date", "Open",
+                                                                                         "High", "Low", "Close",
+                                                                                         "Volume", "Count", "WAP"]))
+        self.historicalDataFrame.set_index("Date", inplace=True)
+        self.historicalDataFrame.to_hdf("Astock.h5", 'df', mode='w')
+
+
 
     def historicalDataRequests_cancel(self):
         # Canceling historical data requests
