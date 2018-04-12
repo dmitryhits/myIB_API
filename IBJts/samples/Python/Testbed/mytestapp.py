@@ -109,14 +109,14 @@ class TestApp(TestClient, TestWrapper):
         print("queryTime = ", queryTime)
         print("earliest trades date = ", ContractSamples.USStockAtSmart().earliestTradeDate)
         timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime("19980102  14:30:00", dateFormatStr)
-        requestPeriod = timedelta(weeks=1)
+        requestPeriod = timedelta(weeks=2)
         print("Steps:", math.ceil(timeRange/requestPeriod))
         for i in range(int(math.ceil(timeRange/requestPeriod))):
             print("step:", i)
             #requestID = 5000
             self.reqHistoricalData(self.nextHistoricalDataRequestId, ContractSamples.USStockAtSmart(), queryTime,
                                "2 W", "5 mins", "TRADES", 1, 1, False, [])
-            queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=1)).strftime(dateFormatStr)
+            queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
             print("new query time:", queryTime)
             self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
             self.nextHistoricalDataRequestId+=1
@@ -139,8 +139,9 @@ class TestApp(TestClient, TestWrapper):
                                                                                 columns=["reqID", "Date", "Open",
                                                                                          "High", "Low", "Close",
                                                                                          "Volume", "Count", "WAP"]))
+        self.historicalDataFrame.Date = pd.to_datetime(self.historicalDataFrame.Date)
         self.historicalDataFrame.set_index("Date", inplace=True)
-        self.historicalDataFrame.to_hdf("Astock.h5", 'df', mode='w')
+        self.historicalDataFrame.to_hdf("Bstock.h5", 'df', mode='w')
 
 
 
