@@ -119,9 +119,9 @@ class TestApp(TestClient, TestWrapper):
             queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
             print("new query time:", queryTime)
             self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
-            self.nextHistoricalDataRequestId+=1
-            if i%5 == 0 and i!=0: time.sleep(2)
-            if i%60 == 0 and i!=0: break
+            self.nextHistoricalDataRequestId += 1
+            if i % 5 == 0 and i != 0: time.sleep(2)
+            if i % 60 == 0 and i != 0: time.sleep(60*10)
             #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
         #self.reqHistoricalData(4104, ContractSamples.ETFOption(), queryTime, "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
 
