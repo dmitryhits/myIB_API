@@ -14,6 +14,7 @@ class TestWrapper(EWrapper):
         self.historical_data = []
         self.historicalDataRequestIds = []
         self.historicalDataReceivedIds = []
+        self.earliestTradeDate = ''
     def error(self, reqId: TickerId, errorCode: int, errorString: str):
         print("Error: ", reqId, " Code: ", errorCode, " Msg: ", errorString+'\n')
         if errorCode == 502:
@@ -21,7 +22,7 @@ class TestWrapper(EWrapper):
 
     def headTimestamp(self, reqId: int, headTimestamp: str):
         print("HeadTimestamp: ", reqId, " ", headTimestamp)
-        return headTimestamp
+        self.earliestTradeDate = headTimestamp
 
     # ! [historicaldata]
     def historicalData(self, reqId:int, bar: BarData):
@@ -94,7 +95,7 @@ class TestApp(TestClient, TestWrapper):
     def historicalDataRequests_req(self):
         # ! [reqHeadTimeStamp]
         self.reqHeadTimeStamp(4103, ContractSamples.USStockAtSmart(), "TRADES", 0, 1)
-        ContractSamples.USStockAtSmart().earliestTradeDate = "19980102  14:30:00"
+        ContractSamples.USStockAtSmart().earliestTradeDate = self.earliestTradeDate
         # ! [reqHeadTimeStamp]
 
         time.sleep(1)
@@ -105,10 +106,11 @@ class TestApp(TestClient, TestWrapper):
         # ! [reqhistoricaldata]
         #queryTime = (datetime.datetime.today() - datetime.timedelta(days=180)).strftime("%Y%m%d %H:%M:%S")
         dateFormatStr = "%Y%m%d %H:%M:%S"
-        queryTime = datetime.today().strftime(dateFormatStr)
+        #queryTime = datetime.today().strftime(dateFormatStr)
+        queryTime =  '20040102  14:30:00'
         print("queryTime = ", queryTime)
-        print("earliest trades date = ", ContractSamples.USStockAtSmart().earliestTradeDate)
-        timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime("19980102  14:30:00", dateFormatStr)
+        print("earliest trades date = ", self.earliestTradeDate)
+        timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime(self.earliestTradeDate, dateFormatStr)
         requestPeriod = timedelta(weeks=2)
         print("Steps:", math.ceil(timeRange/requestPeriod))
         for i in range(int(math.ceil(timeRange/requestPeriod))):
@@ -120,6 +122,7 @@ class TestApp(TestClient, TestWrapper):
             print("new query time:", queryTime)
             self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
             self.nextHistoricalDataRequestId += 1
+            if i == 1: break
             if i % 5 == 0 and i != 0: time.sleep(2)
             if i % 60 == 0 and i != 0: time.sleep(60*10)
             #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
