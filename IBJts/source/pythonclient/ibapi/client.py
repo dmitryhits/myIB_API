@@ -232,7 +232,7 @@ class EClient(object):
                     else:
                         fields = comm.read_fields(text)
                         logging.debug("fields %s", fields)
-                        print('Doing stuff')
+                        print('Doing STUFF')
                         self.decoder.interpret(fields)
                 except (KeyboardInterrupt, SystemExit):
                     logging.info("detected KeyboardInterrupt, SystemExit")
