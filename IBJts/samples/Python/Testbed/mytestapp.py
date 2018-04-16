@@ -91,11 +91,11 @@ class TestApp(TestClient, TestWrapper):
         #self.reqId2nErr = collections.defaultdict(int)
         self.globalCancelOnly = False
         self.simplePlaceOid = None
+        self.sampleStock = ContractSamples.USStockAtSmart()
 
     def historicalDataRequests_req(self):
         # ! [reqHeadTimeStamp]
-        self.reqHeadTimeStamp(4103, ContractSamples.USStockAtSmart(), "TRADES", 0, 1)
-        ContractSamples.USStockAtSmart().earliestTradeDate = self.earliestTradeDate
+        self.reqHeadTimeStamp(4103, self.sampleStock, "TRADES", 0, 1)
         # ! [reqHeadTimeStamp]
 
         time.sleep(1)
@@ -110,13 +110,14 @@ class TestApp(TestClient, TestWrapper):
         queryTime =  '20040102  14:30:00'
         print("queryTime = ", queryTime)
         print("earliest trades date = ", self.earliestTradeDate)
+        print("earliest trades date = ", self.sampleStock.earliestTradeDate)
         timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime(self.earliestTradeDate, dateFormatStr)
         requestPeriod = timedelta(weeks=2)
         print("Steps:", math.ceil(timeRange/requestPeriod))
         for i in range(int(math.ceil(timeRange/requestPeriod))):
             print("step:", i)
             #requestID = 5000
-            self.reqHistoricalData(self.nextHistoricalDataRequestId, ContractSamples.USStockAtSmart(), queryTime,
+            self.reqHistoricalData(self.nextHistoricalDataRequestId, self.sampleStock, queryTime,
                                "2 W", "5 mins", "TRADES", 1, 1, False, [])
             queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
             print("new query time:", queryTime)
