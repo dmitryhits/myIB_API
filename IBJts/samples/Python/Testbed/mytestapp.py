@@ -7,6 +7,38 @@ import time
 from datetime import datetime, timedelta
 import math
 import pandas as pd
+import logging
+import os
+
+def printWhenExecuting(fn):
+    def fn2(self):
+        print("   doing", fn.__name__)
+        fn(self)
+        print("   done w/", fn.__name__)
+
+    return fn2
+
+def SetupLogger():
+    if not os.path.exists("log"):
+        os.makedirs("log")
+
+    time.strftime("pyibapi.%Y%m%d_%H%M%S.log")
+
+    recfmt = '(%(threadName)s) %(asctime)s.%(msecs)03d %(levelname)s %(filename)s:%(lineno)d %(message)s'
+
+    timefmt = '%y%m%d_%H:%M:%S'
+
+    logging.basicConfig(level=logging.DEBUG,
+                       format=recfmt, datefmt=timefmt)
+    #logging.basicConfig(filename=time.strftime("log/pyibapi.%y%m%d_%H%M%S.log"),
+    #                    filemode="w",
+    #                   level=logging.INFO,
+    #                    format=recfmt, datefmt=timefmt)
+    logger = logging.getLogger()
+    console = logging.StreamHandler()
+    console.setLevel(logging.ERROR)
+    logger.addHandler(console)
+
 
 class TestWrapper(EWrapper):
     def __init__(self):
@@ -91,6 +123,7 @@ class TestApp(TestClient, TestWrapper):
         self.globalCancelOnly = False
         self.simplePlaceOid = None
 
+    @printWhenExecuting
     def historicalDataRequests_req(self):
         # ! [reqHeadTimeStamp]
         self.reqHeadTimeStamp(4103, ContractSamples.USStockAtSmart(), "TRADES", 0, 1)
@@ -115,13 +148,15 @@ class TestApp(TestClient, TestWrapper):
             print("step:", i)
             #requestID = 5000
             self.reqHistoricalData(self.nextHistoricalDataRequestId, ContractSamples.USStockAtSmart(), queryTime,
-                               "2 W", "5 mins", "TRADES", 1, 1, False, [])
+                               "2 W", "1 D", "TRADES", 1, 1, False, [])
             queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
             print("new query time:", queryTime)
             self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
             self.nextHistoricalDataRequestId += 1
-            if i % 5 == 0 and i != 0: time.sleep(2)
-            if i % 60 == 0 and i != 0: time.sleep(60*10)
+            #if i % 5 == 0 and i != 0: time.sleep(2)
+            if i % 2 == 0 and i != 0: break
+            #if i % 60 == 0 and i != 0: time.sleep(60*10)
+            if i % 60 == 0 and i != 0: break
             #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
         #self.reqHistoricalData(4104, ContractSamples.ETFOption(), queryTime, "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
 
@@ -133,7 +168,7 @@ class TestApp(TestClient, TestWrapper):
             self.historicalDataStore()
             print("Data Stored")
 
-
+    @printWhenExecuting
     def historicalDataStore(self):
         self.historicalDataFrame = self.historicalDataFrame.append(pd.DataFrame(self.historical_data,
                                                                                 columns=["reqID", "Date", "Open",
@@ -153,6 +188,7 @@ class TestApp(TestClient, TestWrapper):
         #self.cancelHistoricalData(4104)
 
     # ! [nextvalidid]
+    #@printWhenExecuting
     def nextValidId(self, orderId: int):
         super().nextValidId(orderId)
 
@@ -162,8 +198,9 @@ class TestApp(TestClient, TestWrapper):
         # we can start now
         self.start()
 
-
+    #@printWhenExecuting
     def start(self):
+        SetupLogger()
         if self.started:
             return
 

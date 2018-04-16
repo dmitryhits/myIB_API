@@ -74,6 +74,7 @@ class EClient(object):
         full_msg = comm.make_msg(msg)
         logging.info("%s %s %s", "SENDING", current_fn_name(1), full_msg)
         self.conn.sendMsg(full_msg)
+        print("Sending MESSAGE")
 
 
     def logRequest(self, fnName, fnParams):
@@ -212,7 +213,6 @@ class EClient(object):
         if self.nKeybIntHard > 5:
             raise SystemExit()
 
-
     def run(self):
         """This is the function that has the message loop."""
 
@@ -232,6 +232,7 @@ class EClient(object):
                     else:
                         fields = comm.read_fields(text)
                         logging.debug("fields %s", fields)
+                        print('Doing stuff')
                         self.decoder.interpret(fields)
                 except (KeyboardInterrupt, SystemExit):
                     logging.info("detected KeyboardInterrupt, SystemExit")
