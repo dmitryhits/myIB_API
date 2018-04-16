@@ -126,16 +126,17 @@ class TestApp(TestClient, TestWrapper):
         self.sampleStock = ContractSamples.USStockAtSmart()
 
     @printWhenExecuting
-    def historicalDataRequests_req(self):
+    def earliestTradeDate_req(self):
         # ! [reqHeadTimeStamp]
-        self.reqHeadTimeStamp(4103, self.sampleStock, "TRADES", 0, 1)
+        self.reqHeadTimeStamp(4100, self.sampleStock, "TRADES", 0, 1)
         # ! [reqHeadTimeStamp]
-
         time.sleep(1)
+        # ! [cancelHeadTimestamp]
+        self.cancelHeadTimeStamp(4100)
+        # ! [cancelHeadTimestamp]
 
-        # ! [cancelHeadTimestamp]
-        self.cancelHeadTimeStamp(4103)
-        # ! [cancelHeadTimestamp]
+    @printWhenExecuting
+    def historicalDataRequests_req(self):
         # ! [reqhistoricaldata]
         #queryTime = (datetime.datetime.today() - datetime.timedelta(days=180)).strftime("%Y%m%d %H:%M:%S")
         dateFormatStr = "%Y%m%d %H:%M:%S"
@@ -221,6 +222,7 @@ class TestApp(TestClient, TestWrapper):
             #self.marketDepthOperations_req()
             #self.realTimeBars_req()
             #self.reqSecDefOptParams(5001, "SPY", "", "STK", 756733)
+            self.earliestTradeDate_req()
             self.historicalDataRequests_req()
             #self.optionsOperations_req()
             #self.marketScanners_req()
