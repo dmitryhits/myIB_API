@@ -14,6 +14,7 @@ remove the size prefix and put the rest in a Queue.
 
 import logging
 from threading import Thread
+from datetime import datetime
 
 from ibapi import comm
 
@@ -35,7 +36,7 @@ class EReader(Thread):
            
             while len(buf) > 0:
                 (size, msg, buf) = comm.read_msg(buf)
-                print("MESSAGE:", msg)
+                print(datetime.now(), "MESSAGE:", msg)
                 #logging.debug("resp %s", buf.decode('ascii'))
                 logging.debug("size:%d msg.size:%d msg:|%s| buf:%s|", size,
                     len(msg), buf, "|")

@@ -17,6 +17,7 @@ The user just needs to override EWrapper methods to receive the answers.
 import logging
 import queue
 import socket
+from datetime import datetime
 
 from ibapi import (decoder, reader, comm)
 from ibapi.connection import Connection
@@ -74,7 +75,7 @@ class EClient(object):
         full_msg = comm.make_msg(msg)
         logging.info("%s %s %s", "SENDING", current_fn_name(1), full_msg)
         self.conn.sendMsg(full_msg)
-        print("Sending MESSAGE", msg, full_msg)
+        print(datetime.now(), "Sending MESSAGE", msg, full_msg)
 
 
     def logRequest(self, fnName, fnParams):
@@ -234,7 +235,7 @@ class EClient(object):
                     else:
                         fields = comm.read_fields(text)
                         logging.debug("fields %s", fields)
-                        print('CALLING INTERPRETER TOO')
+                        print(datetime.now(), 'CALLING INTERPRETER TOO')
                         self.decoder.interpret(fields)
                 except (KeyboardInterrupt, SystemExit):
                     logging.info("detected KeyboardInterrupt, SystemExit")

@@ -9,6 +9,9 @@ import math
 import pandas as pd
 import logging
 import os
+import queue
+
+from ibapi import comm
 
 def printWhenExecuting(fn):
     def fn2(self):
@@ -131,6 +134,19 @@ class TestApp(TestClient, TestWrapper):
         self.reqHeadTimeStamp(4100, self.sampleStock, "TRADES", 0, 1)
         # ! [reqHeadTimeStamp]
         time.sleep(1)
+        # check the queue iif it is here
+        while self.earliestTradeDate == '':
+            try:
+                text = self.msg_queue.get(block=True, timeout=0.2)
+            except queue.Empty:
+                logging.debug("queue.get: empty")
+            else:
+                fields = comm.read_fields(text)
+                logging.debug("fields %s", fields)
+                print(datetime.now(), 'CALLING INTERPRETER TOO')
+                self.decoder.interpret(fields)
+
+
         # ! [cancelHeadTimestamp]
         self.cancelHeadTimeStamp(4100)
         # ! [cancelHeadTimestamp]
