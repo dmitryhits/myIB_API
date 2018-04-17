@@ -27,6 +27,7 @@ class EReader(Thread):
 
     def run(self):
         while self.conn.isConnected():
+            print("READER is RUNNING")
         
             buf = self.prevBuf + self.conn.recvMsg()
             logging.debug("reader loop, prevBuf.size: %d recvd size: %d buf %s",
@@ -34,6 +35,7 @@ class EReader(Thread):
            
             while len(buf) > 0:
                 (size, msg, buf) = comm.read_msg(buf)
+                print("MESSAGE:", msg)
                 #logging.debug("resp %s", buf.decode('ascii'))
                 logging.debug("size:%d msg.size:%d msg:|%s| buf:%s|", size,
                     len(msg), buf, "|")
