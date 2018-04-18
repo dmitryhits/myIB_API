@@ -57,7 +57,7 @@ class TestWrapper(EWrapper):
 
     def position(self, account: str, contract: Contract, position: float, avgCost: float):
         super().position(account, contract, position, avgCost)
-        self.positions[contract.symbol] = [contract.secType, contract.strike, avgCost]
+        self.positions[contract.symbol] = [contract.secType, contract.strike, position, avgCost]
 
     def positionEnd(self):
         super().positionEnd()
@@ -182,8 +182,8 @@ class TestApp(TestClient, TestWrapper):
         # ! [reqhistoricaldata]
         #queryTime = (datetime.datetime.today() - datetime.timedelta(days=180)).strftime("%Y%m%d %H:%M:%S")
         dateFormatStr = "%Y%m%d %H:%M:%S"
-        #queryTime = datetime.today().strftime(dateFormatStr)
-        queryTime =  '20040302  14:30:00'
+        queryTime = datetime.today().strftime(dateFormatStr)
+        #queryTime =  '20040302  14:30:00'
         print("queryTime = ", queryTime)
         print("earliest trades date = ", self.earliestTradeDate)
         print("earliest trades date = ", self.sampleStock.earliestTradeDate)
@@ -323,6 +323,4 @@ class TestApp(TestClient, TestWrapper):
 if __name__ == '__main__':
     app = TestApp()
     app.connect("127.0.0.1", 4002, 0)
-    print("really no errors?")
     app.run()
-    print("this is the last line in the code")
