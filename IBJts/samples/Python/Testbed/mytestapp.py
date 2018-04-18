@@ -10,6 +10,7 @@ import pandas as pd
 import logging
 import os
 import queue
+from ibapi.contract import Contract
 
 from ibapi import comm
 
@@ -50,8 +51,24 @@ class TestWrapper(EWrapper):
         self.historicalDataRequestIds = []
         self.historicalDataReceivedIds = []
         self.earliestTradeDate = ''
+        self.endOfHistoricalData = False
+        self.positions = {}
+        self.positionsEnd = False
+
+    def position(self, account: str, contract: Contract, position: float, avgCost: float):
+        super().position(account, contract, position, avgCost)
+        self.positions[contract.symbol] = [contract.secType, contract.strike, avgCost]
+
+    def positionEnd(self):
+        super().positionEnd()
+        self.positionsEnd =True
+        print(self.positions)
+
     def error(self, reqId: TickerId, errorCode: int, errorString: str):
         print("Error: ", reqId, " Code: ", errorCode, " Msg: ", errorString+'\n')
+        if errorCode == 162:
+            self.endOfHistoricalData = True
+            self.historicalDataEnd(reqId, "", "")
         if errorCode == 502:
             sys.exit()
 
@@ -61,9 +78,9 @@ class TestWrapper(EWrapper):
 
     # ! [historicaldata]
     def historicalData(self, reqId:int, bar: BarData):
-        print("HistoricalData. ", reqId, " Date:", bar.date, "Open:", bar.open,
-              "High:", bar.high, "Low:", bar.low, "Close:", bar.close, "Volume:", bar.volume,
-              "Count:", bar.barCount, "WAP:", bar.average)
+        #print("HistoricalData. ", reqId, " Date:", bar.date, "Open:", bar.open,
+        #      "High:", bar.high, "Low:", bar.low, "Close:", bar.close, "Volume:", bar.volume,
+        #      "Count:", bar.barCount, "WAP:", bar.average)
         self.historical_data.append([reqId, bar.date, bar.open, bar.high, bar.low, bar.close, bar.volume, bar.barCount, bar.average])
         #if not self.historicalDataReceivedIds.count(reqId): self.historicalDataReceivedIds.append(reqId)
     # ! [historicaldata]
@@ -127,6 +144,24 @@ class TestApp(TestClient, TestWrapper):
         self.globalCancelOnly = False
         self.simplePlaceOid = None
         self.sampleStock = ContractSamples.USStockAtSmart()
+        self.historicalDataReceived = False
+
+    @printWhenExecuting
+    def checkQueue(self):
+        try:
+            text = self.msg_queue.get(block=True, timeout=0.2)
+        except queue.Empty:
+            logging.debug("queue.get: empty")
+        else:
+            fields = comm.read_fields(text)
+            logging.debug("fields %s", fields)
+            print(datetime.now(), 'CALLING INTERPRETER TOO')
+            self.decoder.interpret(fields)
+
+    def reqPositions(self):
+        super().reqPositions()
+        while not self.positionsEnd:
+            self.checkQueue()
 
     @printWhenExecuting
     def earliestTradeDate_req(self):
@@ -136,16 +171,7 @@ class TestApp(TestClient, TestWrapper):
         time.sleep(1)
         # check the queue iif it is here
         while self.earliestTradeDate == '':
-            try:
-                text = self.msg_queue.get(block=True, timeout=0.2)
-            except queue.Empty:
-                logging.debug("queue.get: empty")
-            else:
-                fields = comm.read_fields(text)
-                logging.debug("fields %s", fields)
-                print(datetime.now(), 'CALLING INTERPRETER TOO')
-                self.decoder.interpret(fields)
-
+            self.checkQueue()
 
         # ! [cancelHeadTimestamp]
         self.cancelHeadTimeStamp(4100)
@@ -157,33 +183,48 @@ class TestApp(TestClient, TestWrapper):
         #queryTime = (datetime.datetime.today() - datetime.timedelta(days=180)).strftime("%Y%m%d %H:%M:%S")
         dateFormatStr = "%Y%m%d %H:%M:%S"
         #queryTime = datetime.today().strftime(dateFormatStr)
-        queryTime =  '20040102  14:30:00'
+        queryTime =  '20040302  14:30:00'
         print("queryTime = ", queryTime)
         print("earliest trades date = ", self.earliestTradeDate)
         print("earliest trades date = ", self.sampleStock.earliestTradeDate)
         timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime(self.earliestTradeDate, dateFormatStr)
         requestPeriod = timedelta(weeks=2)
         print("Steps:", math.ceil(timeRange/requestPeriod))
-        for i in range(int(math.ceil(timeRange/requestPeriod))):
-            print("step:", i)
-            #requestID = 5000
-            self.reqHistoricalData(self.nextHistoricalDataRequestId, self.sampleStock, queryTime,
-                               "2 W", "5 mins", "TRADES", 1, 1, False, [])
-            queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
-            print("new query time:", queryTime)
-            self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
-            self.nextHistoricalDataRequestId += 1
-            if i == 1: break
-            if i % 5 == 0 and i != 0: time.sleep(2)
-            if i % 60 == 0 and i != 0: time.sleep(60*10)
-            #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
-        #self.reqHistoricalData(4104, ContractSamples.ETFOption(), queryTime, "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
+        try:
+            for i in range(int(math.ceil(timeRange/requestPeriod))):
+                print("step:", i)
+                self.historicalDataReceived = False
+                #requestID = 5000
+                self.reqHistoricalData(self.nextHistoricalDataRequestId, self.sampleStock, queryTime,
+                                   "2 W", "5 mins", "TRADES", 1, 1, False, [])
+                queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
+                print("new query time:", queryTime)
+
+                self.nextHistoricalDataRequestId += 1
+                while (not self.historicalDataReceived) and (not self.endOfHistoricalData):
+                    self.checkQueue()
+                if self.endOfHistoricalData:
+                    print('*************NO MORE DATA************************')
+                    break
+                #else:
+                    #self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
+                    #print("ADDING sent ID", self.nextHistoricalDataRequestId)
+
+                #if i % 5 == 0 and i != 0: time.sleep(2)
+                #if i % 60 == 0 and i != 0: time.sleep(60*10)
+                #self.reqHistoricalData(4102, ContractSamples.ETF(), queryTime, "1 Y", "1 day", "MIDPOINT", 1, 1, False, [])
+                #self.reqHistoricalData(4104, ContractSamples.ETFOption(), queryTime, "2 W", "5 mins", "MIDPOINT", 1, 1, False, [])
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            raise
 
         # ! [reqhistoricaldata]
     def historicalDataEnd(self, reqId: int, start: str, end: str):
         super().historicalDataEnd(reqId, start, end)
-        self.historicalDataReceivedIds.append(reqId)
-        if len(self.historicalDataReceivedIds) == len(self.historicalDataRequestIds):
+        print("ADDING received ID", reqId)
+        #self.historicalDataReceivedIds.append(reqId)
+        self.historicalDataReceived = True
+        if self.endOfHistoricalData:
             self.historicalDataStore()
             print("Data Stored")
 
@@ -196,8 +237,6 @@ class TestApp(TestClient, TestWrapper):
         self.historicalDataFrame.Date = pd.to_datetime(self.historicalDataFrame.Date)
         self.historicalDataFrame.set_index("Date", inplace=True)
         self.historicalDataFrame.to_hdf("Bstock.h5", 'df', mode='w')
-
-
 
     def historicalDataRequests_cancel(self):
         # Canceling historical data requests
@@ -238,8 +277,9 @@ class TestApp(TestClient, TestWrapper):
             #self.marketDepthOperations_req()
             #self.realTimeBars_req()
             #self.reqSecDefOptParams(5001, "SPY", "", "STK", 756733)
-            self.earliestTradeDate_req()
-            self.historicalDataRequests_req()
+            self.reqPositions()
+            #self.earliestTradeDate_req()
+            #self.historicalDataRequests_req()
             #self.optionsOperations_req()
             #self.marketScanners_req()
             #self.reutersFundamentals_req()
