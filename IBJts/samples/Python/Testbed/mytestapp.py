@@ -32,12 +32,12 @@ def SetupLogger():
 
     timefmt = '%y%m%d_%H:%M:%S'
 
-    logging.basicConfig(level=logging.DEBUG,
-                       format=recfmt, datefmt=timefmt)
-    #logging.basicConfig(filename=time.strftime("log/pyibapi.%y%m%d_%H%M%S.log"),
-    #                    filemode="w",
-    #                   level=logging.INFO,
-    #                    format=recfmt, datefmt=timefmt)
+    #logging.basicConfig(level=logging.DEBUG,
+    #                   format=recfmt, datefmt=timefmt)
+    logging.basicConfig(filename=time.strftime("log/pyibapi.%y%m%d_%H%M%S.log"),
+                        filemode="w",
+                        level=logging.INFO,
+                        format=recfmt, datefmt=timefmt)
     logger = logging.getLogger()
     console = logging.StreamHandler()
     console.setLevel(logging.ERROR)
@@ -141,7 +141,7 @@ class TestApp(TestClient, TestWrapper):
         self.sampleStock = ContractSamples.USStockAtSmart()
         self.historicalDataReceived = False
 
-    @printWhenExecuting
+    #@printWhenExecuting
     def checkQueue(self):
         try:
             text = self.msg_queue.get(block=True, timeout=0.2)
@@ -150,7 +150,7 @@ class TestApp(TestClient, TestWrapper):
         else:
             fields = comm.read_fields(text)
             logging.debug("fields %s", fields)
-            print(datetime.now(), 'CALLING INTERPRETER TOO')
+            #print(datetime.now(), 'CALLING INTERPRETER TOO')
             self.decoder.interpret(fields)
 
     def reqPositions(self):
@@ -229,9 +229,10 @@ class TestApp(TestClient, TestWrapper):
                                                                                 columns=["reqID", "Date", "Open",
                                                                                          "High", "Low", "Close",
                                                                                          "Volume", "Count", "WAP"]))
+        filename = self.sampleStock.symbol+".h5"
         self.historicalDataFrame.Date = pd.to_datetime(self.historicalDataFrame.Date)
         self.historicalDataFrame.set_index("Date", inplace=True)
-        self.historicalDataFrame.to_hdf("Bstock.h5", 'df', mode='w')
+        self.historicalDataFrame.to_hdf(filename, 'df', mode='w')
 
     def historicalDataRequests_cancel(self):
         # Canceling historical data requests
@@ -253,7 +254,6 @@ class TestApp(TestClient, TestWrapper):
 
     #@printWhenExecuting
     def start(self):
-        SetupLogger()
         if self.started:
             return
 
@@ -272,9 +272,11 @@ class TestApp(TestClient, TestWrapper):
             #self.marketDepthOperations_req()
             #self.realTimeBars_req()
             #self.reqSecDefOptParams(5001, "SPY", "", "STK", 756733)
-            self.reqPositions()
-            #self.earliestTradeDate_req()
-            #self.historicalDataRequests_req()
+            #self.reqPositions()
+            for stock in ['SPY', 'AEE', 'LL', 'WMT', 'XLV', 'XLE', 'XLI']:
+                self.sampleStock.symbol = stock
+                self.earliestTradeDate_req()
+                self.historicalDataRequests_req()
             #self.optionsOperations_req()
             #self.marketScanners_req()
             #self.reutersFundamentals_req()
@@ -316,6 +318,7 @@ class TestApp(TestClient, TestWrapper):
 
 
 if __name__ == '__main__':
+    SetupLogger()
     app = TestApp()
     #app.connect("127.0.0.1", 4002, 0)
     app.connect("127.0.0.1", 7496, 0)

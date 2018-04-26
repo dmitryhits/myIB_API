@@ -75,7 +75,7 @@ class EClient(object):
         full_msg = comm.make_msg(msg)
         logging.info("%s %s %s", "SENDING", current_fn_name(1), full_msg)
         self.conn.sendMsg(full_msg)
-        print(datetime.now(), "Sending MESSAGE", msg, full_msg)
+        #print(datetime.now(), "Sending MESSAGE", msg, full_msg)
 
 
     def logRequest(self, fnName, fnParams):
@@ -153,7 +153,7 @@ class EClient(object):
 
             #sometimes I get news before the server version, thus the loop
             while len(fields) != 2:
-                print("CALLING INTERPRETER")
+                #print("CALLING INTERPRETER")
                 self.decoder.interpret(fields)
                 buf = self.conn.recvMsg()
                 logging.debug("ANSWER %s", buf)
@@ -224,7 +224,7 @@ class EClient(object):
                 try:
                     try:
                         text = self.msg_queue.get(block=True, timeout=0.2)
-                        print("TEXT:", text)
+                        #print("TEXT:", text)
                         if len(text) > MAX_MSG_LEN:
                             self.wrapper.error(NO_VALID_ID, BAD_LENGTH.code(),
                                 "%s:%d:%s" % (BAD_LENGTH.msg(), len(text), text))
@@ -235,12 +235,12 @@ class EClient(object):
                     else:
                         fields = comm.read_fields(text)
                         logging.debug("fields %s", fields)
-                        print(datetime.now(), 'CALLING INTERPRETER TOO')
+                        #print(datetime.now(), 'CALLING INTERPRETER TOO')
                         self.decoder.interpret(fields)
                 except (KeyboardInterrupt, SystemExit):
                     logging.info("detected KeyboardInterrupt, SystemExit")
                     self.keyboardInterrupt()
-                    print("KEYBOARD INTERRUPT")
+                    #print("KEYBOARD INTERRUPT")
                     self.keyboardInterruptHard()
                 except BadMessage:
                     logging.info("BadMessage")
