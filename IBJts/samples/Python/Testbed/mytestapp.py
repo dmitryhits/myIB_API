@@ -111,9 +111,6 @@ class TestWrapper(EWrapper):
         print("Strikes:", strikes)
     # ! [securityDefinitionOptionParameter]
 
-
-
-
     # ! [securityDefinitionOptionParameterEnd]
     def securityDefinitionOptionParameterEnd(self, reqId: int):
         super().securityDefinitionOptionParameterEnd(reqId)
@@ -125,8 +122,6 @@ class TestWrapper(EWrapper):
 class TestClient(EClient):
     def __init__(self, wrapper):
         EClient.__init__(self, wrapper)
-
-
 
 
 class TestApp(TestClient, TestWrapper):
@@ -322,5 +317,7 @@ class TestApp(TestClient, TestWrapper):
 
 if __name__ == '__main__':
     app = TestApp()
-    app.connect("127.0.0.1", 4002, 0)
+    #app.connect("127.0.0.1", 4002, 0)
+    app.connect("127.0.0.1", 7496, 0)
+
     app.run()
