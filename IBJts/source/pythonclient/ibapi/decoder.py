@@ -1140,7 +1140,7 @@ class Decoder(Object):
 
         sMsgId = fields[0]
         nMsgId = int(sMsgId)
-        print("Got Message:", nMsgId)
+        #print("Got Message:", nMsgId)
         handleInfo = self.msgId2handleInfo.get(nMsgId, None)
 
         if handleInfo is None:

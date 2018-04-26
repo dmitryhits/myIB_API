@@ -36,7 +36,7 @@ class EReader(Thread):
            
             while len(buf) > 0:
                 (size, msg, buf) = comm.read_msg(buf)
-                print(datetime.now(), "MESSAGE:", msg)
+                #print(datetime.now(), "MESSAGE:", msg)
                 #logging.debug("resp %s", buf.decode('ascii'))
                 logging.debug("size:%d msg.size:%d msg:|%s| buf:%s|", size,
                     len(msg), buf, "|")
