@@ -131,7 +131,7 @@ class TestApp(TestClient, TestWrapper):
         self.nKeybInt = 0
         self.started = False
         self.nextValidOrderId = None
-        self.nextHistoricalDataRequestId = 5000
+        self.nextRequestId = 5000
         self.historicalDataFrame = pd.DataFrame(columns=["reqID", "Date", "Open", "High", "Low",
                                                          "Close", "Volume", "Count", "WAP"])
         self.permId2ord = {}
@@ -160,17 +160,21 @@ class TestApp(TestClient, TestWrapper):
 
     @printWhenExecuting
     def earliestTradeDate_req(self):
+        print('current Stock is:', self.sampleStock.symbol)
         # ! [reqHeadTimeStamp]
-        self.reqHeadTimeStamp(4100, self.sampleStock, "TRADES", 0, 1)
+        self.reqHeadTimeStamp(self.nextRequestId, self.sampleStock, "TRADES", 0, 1)
         # ! [reqHeadTimeStamp]
         time.sleep(1)
-        # check the queue iif it is here
+        # check the queue if it has arrived
         while self.earliestTradeDate == '':
             self.checkQueue()
+        self.sampleStock.earliestTradeDate = self.earliestTradeDate
+        # ! [cancelHeadTimestamp]
+        self.cancelHeadTimeStamp(self.nextRequestId)
+        # ! [cancelHeadTimestamp]
 
-        # ! [cancelHeadTimestamp]
-        self.cancelHeadTimeStamp(4100)
-        # ! [cancelHeadTimestamp]
+        # Increment the request Id
+        self.nextRequestId += 1
 
     @printWhenExecuting
     def historicalDataRequests_req(self):
@@ -179,28 +183,36 @@ class TestApp(TestClient, TestWrapper):
         dateFormatStr = "%Y%m%d %H:%M:%S"
         queryTime = datetime.today().strftime(dateFormatStr)
         #queryTime =  '20040302  14:30:00'
-        print("queryTime = ", queryTime)
+        # print("queryTime = ", queryTime)
         print("earliest trades date = ", self.earliestTradeDate)
         print("earliest trades date = ", self.sampleStock.earliestTradeDate)
         timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime(self.earliestTradeDate, dateFormatStr)
         requestPeriod = timedelta(weeks=2)
         print("Steps:", math.ceil(timeRange/requestPeriod))
         try:
-            for i in range(int(math.ceil(timeRange/requestPeriod))):
+            # for i in range(int(math.ceil(timeRange/requestPeriod))):
+            for i in range(1):
                 print("step:", i)
                 self.historicalDataReceived = False
                 #requestID = 5000
-                self.reqHistoricalData(self.nextHistoricalDataRequestId, self.sampleStock, queryTime,
+                print('Current stock is:', self.sampleStock.symbol)
+                self.reqHistoricalData(self.nextRequestId, self.sampleStock, queryTime,
                                    "2 W", "5 mins", "TRADES", 1, 1, False, [])
                 queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
-                print("new query time:", queryTime)
+                # print("new query time:", queryTime)
 
-                self.nextHistoricalDataRequestId += 1
                 while (not self.historicalDataReceived) and (not self.endOfHistoricalData):
                     self.checkQueue()
+
+                # Increment the request Id
+                self.nextRequestId += 1
+
                 if self.endOfHistoricalData:
                     print('*************NO MORE DATA************************')
                     break
+            else:
+                self.endOfHistoricalData = True
+                self.historicalDataEnd()
                 #else:
                     #self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
                     #print("ADDING sent ID", self.nextHistoricalDataRequestId)
@@ -232,6 +244,7 @@ class TestApp(TestClient, TestWrapper):
         filename = self.sampleStock.symbol+".h5"
         self.historicalDataFrame.Date = pd.to_datetime(self.historicalDataFrame.Date)
         self.historicalDataFrame.set_index("Date", inplace=True)
+        print('************* Writing to file', filename, '***********************')
         self.historicalDataFrame.to_hdf(filename, 'df', mode='w')
 
     def historicalDataRequests_cancel(self):
@@ -320,7 +333,7 @@ class TestApp(TestClient, TestWrapper):
 if __name__ == '__main__':
     SetupLogger()
     app = TestApp()
-    #app.connect("127.0.0.1", 4002, 0)
-    app.connect("127.0.0.1", 7496, 0)
+    app.connect("127.0.0.1", 4002, 0)
+    #app.connect("127.0.0.1", 7496, 0)
 
     app.run()
