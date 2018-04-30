@@ -190,21 +190,22 @@ class TestApp(TestClient, TestWrapper):
         requestPeriod = timedelta(weeks=2)
         print("Steps:", math.ceil(timeRange/requestPeriod))
         try:
-            # for i in range(int(math.ceil(timeRange/requestPeriod))):
-            for i in range(1):
+            for i in range(int(math.ceil(timeRange/requestPeriod))):
+            # for i in range(1):
                 print("step:", i)
                 self.historicalDataReceived = False
                 #requestID = 5000
                 print('Current stock is:', self.sampleStock.symbol)
                 self.reqHistoricalData(self.nextRequestId, self.sampleStock, queryTime,
                                    "2 W", "5 mins", "TRADES", 1, 1, False, [])
-                queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
+
                 # print("new query time:", queryTime)
 
                 while (not self.historicalDataReceived) and (not self.endOfHistoricalData):
                     self.checkQueue()
 
-                # Increment the request Id
+                # Decriment the query time and Increment the request Id
+                queryTime = (datetime.strptime(queryTime, dateFormatStr) - timedelta(weeks=2)).strftime(dateFormatStr)
                 self.nextRequestId += 1
 
                 if self.endOfHistoricalData:
@@ -212,7 +213,7 @@ class TestApp(TestClient, TestWrapper):
                     break
             else:
                 self.endOfHistoricalData = True
-                self.historicalDataEnd()
+                self.historicalDataEnd(self.nextRequestId, '', '')
                 #else:
                     #self.historicalDataRequestIds.append(self.nextHistoricalDataRequestId)
                     #print("ADDING sent ID", self.nextHistoricalDataRequestId)
@@ -287,6 +288,7 @@ class TestApp(TestClient, TestWrapper):
             #self.reqSecDefOptParams(5001, "SPY", "", "STK", 756733)
             #self.reqPositions()
             for stock in ['SPY', 'AEE', 'LL', 'WMT', 'XLV', 'XLE', 'XLI']:
+                self.endOfHistoricalData = False
                 self.sampleStock.symbol = stock
                 self.earliestTradeDate_req()
                 self.historicalDataRequests_req()
