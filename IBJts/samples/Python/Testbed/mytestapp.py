@@ -288,6 +288,8 @@ class TestApp(TestClient, TestWrapper):
             #self.reqSecDefOptParams(5001, "SPY", "", "STK", 756733)
             #self.reqPositions()
             for stock in ['SPY', 'AEE', 'LL', 'WMT', 'XLV', 'XLE', 'XLI']:
+                # re-intialize the list and reset endOfHistoricalData before getting the next stock
+                self.historical_data = []
                 self.endOfHistoricalData = False
                 self.sampleStock.symbol = stock
                 self.earliestTradeDate_req()
