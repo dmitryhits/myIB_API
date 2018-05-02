@@ -199,7 +199,7 @@ class TestApp(TestClient, TestWrapper):
                 self.reqHistoricalData(self.nextRequestId, self.sampleStock, queryTime,
                                    "2 W", "5 mins", "TRADES", 1, 1, False, [])
 
-                # print("new query time:", queryTime)
+                print("Requested historical data")
 
                 while (not self.historicalDataReceived) and (not self.endOfHistoricalData):
                     self.checkQueue()
@@ -286,8 +286,10 @@ class TestApp(TestClient, TestWrapper):
             #self.marketDepthOperations_req()
             #self.realTimeBars_req()
             #self.reqSecDefOptParams(5001, "SPY", "", "STK", 756733)
-            #self.reqPositions()
-            for stock in ['SPY', 'AEE', 'LL', 'WMT', 'XLV', 'XLE', 'XLI']:
+            self.reqPositions()
+            self.positions.pop("ANDV", None)
+            self.positions.pop("AVY", None)
+            for stock in self.positions.keys():
                 # re-intialize the list, DataFrame and reset endOfHistoricalData before getting the next stock
                 self.historical_data = []
                 self.historicalDataFrame = pd.DataFrame(columns=["reqID", "Date", "Open", "High", "Low",
@@ -339,7 +341,7 @@ class TestApp(TestClient, TestWrapper):
 if __name__ == '__main__':
     SetupLogger()
     app = TestApp()
-    app.connect("127.0.0.1", 4002, 0)
+    app.connect("127.0.0.1", 4001, 0)
     #app.connect("127.0.0.1", 7496, 0)
 
     app.run()
