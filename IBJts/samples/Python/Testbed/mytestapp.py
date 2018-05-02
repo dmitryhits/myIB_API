@@ -144,10 +144,13 @@ class TestApp(TestClient, TestWrapper):
     #@printWhenExecuting
     def checkQueue(self):
         try:
+            print("*********Checking Queue***************")
             text = self.msg_queue.get(block=True, timeout=0.2)
         except queue.Empty:
+            print("-------------Queue is empty---------------")
             logging.debug("queue.get: empty")
         else:
+            print("+++++++++++Reading Data++++++++++++++++++")
             fields = comm.read_fields(text)
             logging.debug("fields %s", fields)
             #print(datetime.now(), 'CALLING INTERPRETER TOO')
