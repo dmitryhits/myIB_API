@@ -191,11 +191,12 @@ class TestApp(TestClient, TestWrapper):
         print("earliest trades date = ", self.sampleStock.earliestTradeDate)
         timeRange = datetime.strptime(queryTime, dateFormatStr) - datetime.strptime(self.earliestTradeDate, dateFormatStr)
         requestPeriod = timedelta(weeks=2)
-        print("Steps:", math.ceil(timeRange/requestPeriod))
+        steps = math.ceil(timeRange/requestPeriod)
+        print("Steps:", steps)
         try:
-            for i in range(int(math.ceil(timeRange/requestPeriod))):
+            for i in range(int(steps)):
             # for i in range(1):
-                print("step:", i)
+                print("step:", i, "out of", steps)
                 self.historicalDataReceived = False
                 #requestID = 5000
                 print('Current stock is:', self.sampleStock.symbol)
@@ -292,6 +293,8 @@ class TestApp(TestClient, TestWrapper):
             self.reqPositions()
             self.positions.pop("ANDV", None)
             self.positions.pop("AVY", None)
+            self.positions.pop("NDAQ", None)
+            self.positions.pop('MPC', None)
             for stock in self.positions.keys():
                 # re-intialize the list, DataFrame and reset endOfHistoricalData before getting the next stock
                 self.historical_data = []
